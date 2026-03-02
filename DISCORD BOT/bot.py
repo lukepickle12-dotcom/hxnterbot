@@ -21,11 +21,8 @@ bot = commands.Bot(
 
 warnings = {}
 sniped_messages = {}
-
 EMBED_COLOR = 0x680000
 
-
-# ---------------- READY EVENT ----------------
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -33,7 +30,6 @@ async def on_ready():
         status=discord.Status.dnd,
         activity=discord.Game("chilling")
     )
-
 
 # ---------------- HELPERS ----------------
 def parse_duration(duration: str):
@@ -175,3 +171,4 @@ if __name__ == "__main__":
         print("ERROR: DISCORD_TOKEN not set in Railway Variables")
     else:
         bot.run(TOKEN)
+
