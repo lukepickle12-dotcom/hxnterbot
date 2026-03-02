@@ -21,8 +21,10 @@ bot = commands.Bot(
 
 warnings = {}
 sniped_messages = {}
+
 EMBED_COLOR = 0x680000
 
+# ---------------- READY EVENT ----------------
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -39,14 +41,11 @@ def parse_duration(duration: str):
     amount, unit = match.groups()
     return int(amount) * {"s": 1, "m": 60, "h": 3600, "d": 86400}[unit]
 
-
 def embed_success(title, desc):
     return discord.Embed(title=title, description=desc, color=EMBED_COLOR)
 
-
 def embed_error(desc):
     return discord.Embed(title="Error", description=desc, color=EMBED_COLOR)
-
 
 async def get_member(ctx, member_str):
     try:
@@ -59,13 +58,11 @@ async def get_member(ctx, member_str):
                 return None
     return None
 
-
 # ---------------- SNIPE SYSTEM ----------------
 @bot.event
 async def on_message_delete(message):
     if message.author.bot:
         return
-
     channel_id = message.channel.id
     entry = {
         "author": message.author,
@@ -73,47 +70,36 @@ async def on_message_delete(message):
         "attachments": message.attachments,
         "time": datetime.utcnow()
     }
-
     sniped_messages.setdefault(channel_id, [])
     sniped_messages[channel_id].insert(0, entry)
-
     if len(sniped_messages[channel_id]) > 5:
         sniped_messages[channel_id].pop()
-
 
 @bot.command()
 async def snipe(ctx, index: int = 1):
     channel_id = ctx.channel.id
-
     if channel_id not in sniped_messages or not sniped_messages[channel_id]:
         await ctx.send(embed=embed_error("There's nothing to snipe!"))
         return
-
     if index < 1 or index > len(sniped_messages[channel_id]):
         await ctx.send(embed=embed_error(
             f"Invalid index! Choose 1-{len(sniped_messages[channel_id])}"
         ))
         return
-
     data = sniped_messages[channel_id][index - 1]
-
     embed = discord.Embed(
         title=f"Sniped Message #{index}",
         description=data["content"] or "No text content",
         color=EMBED_COLOR,
         timestamp=data["time"]
     )
-
     embed.set_author(
         name=str(data["author"]),
         icon_url=data["author"].display_avatar.url
     )
-
     if data["attachments"]:
         embed.set_image(url=data["attachments"][0].url)
-
     await ctx.send(embed=embed)
-
 
 # ---------------- BAN ----------------
 @bot.command()
@@ -122,7 +108,6 @@ async def ban(ctx, member: str = None, *, reason="No reason provided"):
     if not member:
         await ctx.send(embed=embed_error("Usage: ?ban <@user|id> [reason]"))
         return
-
     try:
         if member.isdigit():
             user = discord.Object(id=int(member))
@@ -136,7 +121,6 @@ async def ban(ctx, member: str = None, *, reason="No reason provided"):
             if not member_obj:
                 await ctx.send(embed=embed_error("Member not found."))
                 return
-
             await member_obj.ban(reason=reason)
             await ctx.send(embed=embed_success(
                 "User Banned",
@@ -144,7 +128,6 @@ async def ban(ctx, member: str = None, *, reason="No reason provided"):
             ))
     except Exception as e:
         await ctx.send(embed=embed_error(f"Failed: {e}"))
-
 
 # ---------------- UNBAN ----------------
 @bot.command()
@@ -159,11 +142,9 @@ async def unban(ctx, user_id: int):
                     f"{entry.user} has been unbanned."
                 ))
                 return
-
         await ctx.send(embed=embed_error("User not found in bans."))
     except Exception as e:
         await ctx.send(embed=embed_error(f"Failed: {e}"))
-
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
@@ -171,4 +152,3 @@ if __name__ == "__main__":
         print("ERROR: DISCORD_TOKEN not set in Railway Variables")
     else:
         bot.run(TOKEN)
-
